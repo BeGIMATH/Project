@@ -1,0 +1,40 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/begi/Desktop/Project/src/image.cpp
+image.h
+/home/begi/Desktop/Project/src/image.h
+
+/home/begi/Desktop/Project/src/tools.cpp
+tools.h
+/home/begi/Desktop/Project/src/tools.h
+opencv2/opencv.hpp
+-
+eigen3/Eigen/Dense
+-
+eigen3/unsupported/Eigen/FFT
+-
+fftw3.h
+-
+iostream
+-
+cmath
+-
+
+include/image.h
+opencv2/opencv.hpp
+-
+eigen3/Eigen/Dense
+-
+
+include/tools.h
+opencv2/opencv.hpp
+-
+eigen3/Eigen/Dense
+-
+

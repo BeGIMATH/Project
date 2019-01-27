@@ -1,8 +1,0 @@
-/home/begi/Desktop/Project/test/CMakeFiles/rebuild_cache.dir
-/home/begi/Desktop/Project/test/CMakeFiles/edit_cache.dir
-/home/begi/Desktop/Project/test/src/CMakeFiles/rebuild_cache.dir
-/home/begi/Desktop/Project/test/src/CMakeFiles/FingerPrint.dir
-/home/begi/Desktop/Project/test/src/CMakeFiles/edit_cache.dir
-/home/begi/Desktop/Project/test/demo/CMakeFiles/rebuild_cache.dir
-/home/begi/Desktop/Project/test/demo/CMakeFiles/main_exe.dir
-/home/begi/Desktop/Project/test/demo/CMakeFiles/edit_cache.dir

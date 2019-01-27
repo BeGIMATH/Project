@@ -8,7 +8,7 @@ find_package( OpenCV 3.2.0 REQUIRED)
 find_package( Eigen3 3.3 REQUIRED NO_MODULE)
 
 # Required package for fft
-find_package( FFTW REQUIRED)
+find_library(FFTW REQUIRED)
 
 #Bring the header, such as image.h into the project
 include_directories(include)

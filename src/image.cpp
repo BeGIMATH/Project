@@ -1,26 +1,27 @@
-/*! \file image.cpp
- *  \brief Image class implementation.
+/** 
+ * @file image.cpp
+ * @brief Image class implementation.
  */
 
 
 #include "image.h" /* Image class definition */
-#define EIGEN_FFTW_DEFAULT /* MACRO which makes possible to use FFT library */
+#define EIGEN_FFTW_DEFAULT /* MACRO which makes possible to use FFT library */ 
 #include <opencv2/opencv.hpp> /* Header file for opencv library */
 
-#include <eigen3/unsupported/Eigen/FFT> /* Header for the FFT Eigen library */
-#include <fftw3.h> /* Header for FFTW library, which is a dependency for the Eigen FFT library */
+#include "FFT" /* Header for the FFT Eigen library */
+
 
 #include <iostream> /* std::cout */
-#include <cmath> /* Use of functions $\cos (\theta )$, $\sin(\theta )$, power funtion and the square toorfunction. */
+#include <cmath> /* Use of functions \f$\cos (\theta )\f$, \f$\sin(\theta )\f$, power funtion and the square rootfunction. */
 
 
-#define PI 3.1415926536 /* Number $\pi$ */
+#define PI 3.1415926536 /*Approximate value of  number \f$\pi\f$ */
 #define EMPTY 1.001 /* Used when working with Forward_Rotate method */
 
 
-/*! \Constructor */
-Image::Image(const cv::Mat  &M1):M(M1) {
 
+Image::Image(const cv::Mat  &M1):M(M1) {
+  
 }
 
  Eigen::MatrixXf Image::cast_to_float(cv::Mat M1){
@@ -73,9 +74,9 @@ int Image::max_val(){
 
 cv::Mat Image::black_white_rec(){
   Eigen::MatrixXf M1 = cast_to_float(M);
-
-  for(int i=30; i<100; i++){
-    for(int j=50; j<200; j++){
+  
+  for(int i=100; i<144; i++){
+    for(int j=50; j<100; j++){
       M1(i,j) = 1;
     }
   }
@@ -90,10 +91,10 @@ cv::Mat Image::black_white_rec(){
 
 cv::Mat Image::symetry_y_axis(){
   Eigen::MatrixXf M1 = cast_to_float(M);
-
+  
   int n = M1.rows();
   int m = M1.cols();
-
+  
   Eigen::MatrixXf M2(n,m);
 
   for(int i=1; i<n; i++){
@@ -120,7 +121,7 @@ float Image::Euclidean_Distance(int x0, int y0, int x, int y ) {
 cv::Mat Image::isotrophic(){
 
   Eigen::MatrixXf M1 = cast_to_float(M);
-
+  
   int n = M1.rows();
   int m = M1.cols();
 
@@ -137,8 +138,8 @@ cv::Mat Image::isotrophic(){
     }
   }
 
-
-
+  
+ 
   for(int i = 1 ; i < n; i++){
     for(int j = 1; j < m; j++){
 
@@ -152,7 +153,7 @@ cv::Mat Image::isotrophic(){
 
   cv::Mat M2 = cast_to_int(M1);
   return M2;
-
+  
 
 }
 
@@ -182,10 +183,23 @@ cv::Mat Image::asotrophic(){
   }
 
 
-
+  
   cv::Mat M2 = cast_to_int(M1);
   return M2;
 }
+
+float Image::middle(float x, float y, float Mx1y1, float Mx2y1, float Mx1y2, float Mx2y2){
+  double dx, cx, dy, cy;
+  dx = std::modf(x, &cx); // fractional part of $\ dx$
+  dy = std::modf(y, &cy); // 
+  float res = (Mx1y1*(1-dx)*(1-dy) + Mx2y1*dx*(1-dy) + Mx1y2*(1-dx)*dy + Mx2y2*dx*dy) ;
+  return res;
+}
+
+
+
+
+
 
 cv::Mat Image::Rotate_forward(float theta){
   Eigen::MatrixXf M1 = cast_to_float(M);
@@ -195,10 +209,10 @@ cv::Mat Image::Rotate_forward(float theta){
   int m = M1.cols();
 
   Eigen::MatrixXf M2(n,m);
-
+  
   int center_x = n/2;
   int center_y = m/2;
-
+  
 
   for(int x=0; x<n; x++){
     for(int y=0;y<m; y++){
@@ -208,22 +222,17 @@ cv::Mat Image::Rotate_forward(float theta){
 
   for(int x=0; x<n; x++){
     for(int y=0;y<m; y++){
-      int xp = ((x - center_x) * cos(angle) - (y - center_y) * sin(angle))  + center_x ;
-      int yp = ((x - center_x) * sin(angle) + (y - center_y) * cos(angle))  + center_y;
-      if((xp > 0 && xp < n ) && (yp > 0 && yp < m)){
-        M2(xp,yp) = M1(x,y); //(M1(x+1,y+1) + M1(x-1,y) + M1(x+1,y-1) + M1(x-1,y-1))/4;
+      float x2 = ((x - center_x) * cos(angle) - (y - center_y) * sin(angle))  + center_x ;
+      float y2 = ((x - center_x) * sin(angle) + (y - center_y) * cos(angle))  + center_y;
+      int xp = int(x2);
+      int yp = int(y2); 
+      if((x2 > 0 && x2 < n-1 ) && (y2 > 0 && y2 < m-1)){
+       
+         M2(x,y) = middle(x2, y2, M1(xp,yp), M1(xp+1,yp), M1(xp,yp+1), M1(xp+1,yp+1));
       }
     }
   }
-
-  for(int i=1;i<n-1; i++){
-    for(int j=1; j<m-1; j++){
-      if (M2(i,j) == EMPTY) {
-        //m(i,j) = (m(i+1,j) + m(i-1,j) + m(i,j+1) + m(i,j-1))/4 ;
-        M2(i,j) = (M2(i+1,j) + M2(i-1,j) + M2(i,j+1) + M2(i,j-1) + M2(i+1,j+1) + M2(i+1,j-1) + M2(i-1,j+1) + M2(i-1,j-1))/8;
-      }
-    }
-  }
+  
   cv::Mat M3 = cast_to_int(M2);
   return M3;
 }
@@ -237,43 +246,43 @@ cv::Mat Image::Rotate_forward(float theta){
 
 
 cv::Mat Image::Rotate_backward(float theta){
-
-    Eigen::MatrixXf M1 = cast_to_float(M);
+    
+    Eigen::MatrixXf M1 = cast_to_float(M); 
     float a = theta;
     float angle = a*PI/180;
     int n = M1.rows();
     int m = M1.cols();
     int center_x = n/2;
     int center_y = m/2;
-
+   
     Eigen::MatrixXf M2(n,m);
-
+    
     for(int x=0; x<n; x++){
       for(int y=0;y<m; y++){
         int xp = ((x - center_x) * cos(angle) + (y - center_y) * sin(angle)) + center_x ;
         int yp = ((-1)*(x - center_x) * sin(angle) + (y - center_y) * cos(angle)) + center_y;
           if((xp > 1 && xp < n-1 ) && (yp > 1 && yp < m-1)){
-            //M1(x,y) = (M(xp+1,yp+1)+M(xp+1,yp-1)+M(xp-1,yp+1)+M(xp-1,yp-1))/4;
+            
             M2(x,y) = M1(xp,yp);
           }
           else{
               M2(x,y) = EMPTY;
           }
-
+      
       }
      }
-
+    
     for(int i=1;i<n-1; i++){
     for(int j=1; j<m-1; j++){
       if (M2(i,j) == EMPTY) {
-            //m(i,j) = (m(i+1,j) + m(i-1,j) + m(i,j+1) + m(i,j-1))/4 ;
+            
             M2(i,j) = (M2(i+1,j) + M2(i-1,j) + M2(i,j+1) + M2(i,j-1) + M2(i+1,j+1) + M2(i+1,j-1) + M2(i-1,j+1) + M2(i-1,j-1))/8;
             }
         }
      }
-
-
-
+     
+     
+    
      cv::Mat M3 = cast_to_int(M2);
      return M3;
   }
@@ -289,17 +298,17 @@ double Image::brake(float t, float k){
 }
 
 cv::Mat  Image::distortion(int c_x, int c_y, int s_x, int s_y,float angle,float dx, float dy,float k){
-
+  
     Eigen::MatrixXf M1 = cast_to_float(M);
 
 
     float theta = angle*(PI/180);
-    Eigen::MatrixXf M2 = Eigen::MatrixXf::Ones(M1.rows(),M1.cols());
+    Eigen::MatrixXf M2 = M1;
     int n = M1.rows();
     int m = M1.cols();
     int deltax;
     int deltay;
-
+  
     for(int i = 1 ; i <= n-1; i++){
       for(int j = 1; j <= m-1; j++){
         if((pow((c_x-i),2) + pow((c_y-j)*s_x/s_y,2)) < pow(s_x,2)){
@@ -311,11 +320,11 @@ cv::Mat  Image::distortion(int c_x, int c_y, int s_x, int s_y,float angle,float 
           int yp = int(j + deltay*(1-brake(sh,k)));
 
           if((xp > 1 && xp < n-1 ) && (yp > 1 && yp < m-1)){
-          //if((pow((c_x-xp)/s_x,2) + pow((c_y-yp)/s_y,2)) <= 1){
-            M2(i,j) = M1(xp,yp);
+         
+            M2(i,j) = M2(xp,yp);
             }
            }
-
+        
         }
       }
       cv::Mat M3 = cast_to_int(M2);
@@ -329,46 +338,46 @@ cv::Mat  Image::distortion(int c_x, int c_y, int s_x, int s_y,float angle,float 
     int dataSizeX = M1.cols();
     int dataSizeY = M1.rows();
     int i, j, m, n, mm, nn;
-
-
-    float sum;
+    
+                        
+    float sum;                                      
     int ii,jj;
 
     int kCenterX = int(K.cols()/2);
     int kCenterY = int(K.rows()/2);
 
-    for(i=0; i < M1.rows(); i++)                // rows
+    for(i=0; i < M1.rows(); i++)             
     {
-        for(j=0; j < M1.cols(); j++)            // columns
+        for(j=0; j < M1.cols(); j++)          
         {
-            sum = 0;                            // init to 0 before sum
-            for(m=0; m < K.rows(); m++)      // kernel rows
+            sum = 0;                          
+            for(m=0; m < K.rows(); m++)     
             {
-                mm = K.rows() - 1 - m;       // row index of flipped kernel
+                mm = K.rows() - 1 - m;      
 
-                for(n=0; n < K.cols(); n++)  // kernel columns
+                for(n=0; n < K.cols(); n++)  
                 {
-                    nn = K.cols() - 1 - n;   // column index of flipped kernel
+                    nn = K.cols() - 1 - n;   
 
-                    // index of input signal, used for checking boundary
+                    
                      ii = (i + (kCenterY - mm));
                      jj = (j + (kCenterX - nn));
 
-                    // ignore input samples which are out of bound
+                    
                     if(ii >= 0 && ii < M1.rows() && jj >= 0 && jj < M1.cols()){
                         M2(i,j) += M1(ii,jj) * K(mm,nn);
-
-
-
-
+                        
+                        
+                        
+                        
 
                     }
-
-
+                    
+                    
 
                 }
             }
-
+            
         }
     }
 
@@ -383,12 +392,12 @@ cv::Mat  Image::distortion(int c_x, int c_y, int s_x, int s_y,float angle,float 
    Eigen::MatrixXf K1 = Eigen::MatrixXf::Zero(M1.rows(),M1.cols());
     for (int i=0; i < K.rows(); i++){
         for(int j=0; j < K.cols(); j++){
-            K1(i,j) = K(i,j); // Zero padding the kernel k
+            K1(i,j) = K(i,j); 
         }
     }
     int n = M1.rows();
     int m = M1.cols();
-
+    
     Eigen::MatrixXcf M2(n,m);
     Eigen::MatrixXcf K2(n,m);
     Eigen::FFT< float > fft;
@@ -412,8 +421,8 @@ cv::Mat  Image::distortion(int c_x, int c_y, int s_x, int s_y,float angle,float 
     }
     Eigen::MatrixXcf C(n,m);
     C = M2.cwiseProduct(K2);
-
-
+    
+    
     Eigen::MatrixXcf C1(n,m);
 
     Eigen::FFT< float > ifft;
@@ -422,14 +431,14 @@ cv::Mat  Image::distortion(int c_x, int c_y, int s_x, int s_y,float angle,float 
         ifft.inv(tmpOut, C.col(k));
         C1.col(k) = tmpOut;
     }
-
+    
     Eigen::FFT< float > ifft2;
     for(int k = 0; k < n; k++){
         Eigen::VectorXcf tmpOut(n);
         ifft2.inv(tmpOut, C1.row(k));
         C1.row(k) = tmpOut;
     }
-
+    
     cv::Mat M3 = cast_to_int(C1.real());
     return M3;
 }
@@ -437,7 +446,7 @@ cv::Mat  Image::distortion(int c_x, int c_y, int s_x, int s_y,float angle,float 
 
 
 cv::Mat Image::convolve2(int k_height, int k_width, int c_x, int c_y, int s_x, int s_y, double inner_sigma, double outer_sigma){
-  //Eigen::MatrixXf M1 = cast_to_float(M);
+
 
   Eigen::MatrixXf kernel(k_height,k_width);
   Eigen::MatrixXf kernel1(k_height,k_width);
@@ -452,24 +461,24 @@ cv::Mat Image::convolve2(int k_height, int k_width, int c_x, int c_y, int s_x, i
   Eigen::MatrixXf C1 = cast_to_float(C);
   Eigen::MatrixXf D1 = cast_to_float(D);
 
-
-
+ 
+  
   int i,j;
   for (i=0 ; i<M.rows ; i++) {
       for (j=0 ; j<M.cols ; j++) {
         if((pow(c_x-i,2) + pow((c_y-j)*s_x/s_y,2)) < pow(s_x,2)){
-
+           
            convoluted(i,j) = C1(i,j);
           }
         else{
-
+          
           convoluted(i,j) = D1(i,j);
         }
       }
   }
   cv::Mat M3 = cast_to_int(convoluted);
   return M3;
-
+  
 }
 
 Eigen::MatrixXf Image::getGaussian(int height, int width, double sigma){
@@ -516,3 +525,38 @@ Eigen::MatrixXf Image::getBoxBlur(int height, int width){
             }
         return kernel;
 }
+
+cv::Mat Image::dry() {
+  Eigen::MatrixXf M1=cast_to_float(M);
+  int n = M1.rows();
+  int m = M1.cols();
+  float b = 0.5; // dry finger // it increases the value and makes picture brighter
+ 
+  for(int x=0; x<n; x++){
+    for(int y=0;y<m; y++){
+      M1(x,y) = int( pow(float(M1(x,y)),b)*255 ) / 255.0; 
+    }
+  }
+  cv::Mat M2 = cast_to_int(M1);
+  return M2;
+}
+
+cv::Mat Image::moist() {
+  Eigen::MatrixXf M1=cast_to_float(M);
+  int n = M1.rows();
+  int m = M1.cols();
+  
+  float b = 2.0; // moist finger // it decreases the value and makes picture darker
+  for(int x=0; x<n; x++){
+    for(int y=0;y<m; y++){
+      M1(x,y) = int( pow(float(M1(x,y)),b)*255 ) / 255.0; 
+    }
+  }
+  cv::Mat M2 = cast_to_int(M1);
+  return M2;
+}
+
+
+
+
+
